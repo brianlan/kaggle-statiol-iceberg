@@ -1,6 +1,7 @@
 import os
 import json
 
+import torch
 import numpy as np
 from torch.utils.data import Dataset
 
@@ -12,17 +13,20 @@ class StatoilIcebergDataset(Dataset):
     def __init__(self, file_path, transform=None):
         self.transform = transform
         with open(file_path, 'r') as f:
-            self.train_data = json.load(f)
+            self.data = json.load(f)
 
     def __len__(self):
-        return len(self.train_data)
+        return len(self.data)
 
     def __getitem__(self, item):
-        im = np.array([self.train_data[item]['band_1'], self.train_data[item]['band_1']])
-        im = im.reshape(2, 75, 75).transpose(1, 2, 0)
-        target = self.train_data[item]['is_iceberg']
+        band1 = np.array(self.data[item]['band_1']).reshape(1, 75, 75).transpose(1, 2, 0)
+        band2 = np.array(self.data[item]['band_2']).reshape(1, 75, 75).transpose(1, 2, 0)
+        target = self.data[item].get('is_iceberg', -1)
 
         if self.transform is not None:
-            im = self.transform(im)
+            band1 = self.transform(band1)
+            band2 = self.transform(band2)
+
+        im = torch.cat((band1, band2))
 
         return im, target
