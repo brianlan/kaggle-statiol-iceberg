@@ -1,12 +1,3 @@
-
-# coding: utf-8
-
-# Training
-# ===
-
-# In[1]:
-
-
 import sys; sys.path.append('..')
 import time
 from math import ceil, floor
@@ -27,10 +18,6 @@ import src.torchsample.transforms as TST
 
 
 # ## Define Const
-
-# In[2]:
-
-
 train_data_path = '/home/rlan/datasets/statoil-iceberg/train.json'
 
 BASE_DIR = '/home/rlan/projects/kaggle/kaggle-statoil-iceberg'
@@ -39,22 +26,13 @@ CHECKPOINTS_PATH = opj(BASE_DIR, 'checkpoints')
 MAX_EPOCH = 200
 BATCH_SIZE = 256
 
-
 # ## Setup Logger
-
-# In[3]:
-
-
 model_id = str(int(time.time()))
 print('model_id: %s' % model_id)
 tb_logger = Logger(opj(LOG_DIR, model_id))
 
 
 # ## Transform
-
-# In[9]:
-
-
 transform = T.Compose([T.ToTensor(),
                        T.Lambda(lambda x: (x - x.min()) / (x.max() - x.min())),
                        T.ToPILImage(),
@@ -71,38 +49,22 @@ transform = T.Compose([T.ToTensor(),
 
 
 # ## Dataset
-
-# In[10]:
-
-
 dataset = StatoilIcebergDataset(train_data_path, transform=transform)
 loader = DataLoader(dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=8)
 
 
 # ## Network
-
-# In[11]:
-
-
 net = Net(input_channel=2).cuda() if torch.cuda.is_available() else Net(input_channel=2)
 net.train()
 
 
 # ## Loss and Optimizer
-
-# In[12]:
-
-
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=80, gamma=0.1)
 loss_fn = torch.nn.CrossEntropyLoss()
 
 
 # ## Train
-
-# In[13]:
-
-
 niter_per_epoch = ceil(len(dataset) / BATCH_SIZE)
 # pbar = tqdm.tqdm(range(niter_per_epoch * MAX_EPOCH))
 for epoch in range(MAX_EPOCH):

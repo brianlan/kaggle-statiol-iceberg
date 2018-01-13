@@ -2,11 +2,25 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class ResBlock(nn.Module):
+    def __init__(self, in_channel):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channel, in_channel, 1, padding=1, stride=1)
+        self.conv1_bn = nn.BatchNorm2d(in_channel)
+        self.conv2 = nn.Conv2d(in_channel, in_channel, 3, padding=1, stride=1)
+        self.conv2_bn = nn.BatchNorm2d(in_channel)
+        self.conv3 = nn.Conv2d(in_channel, in_channel * 4, 1, padding=1, stride=1)
+        self.conv3_bn = nn.BatchNorm2d(in_channel * 4)
+
+    # def forward(self, x):
+    #     x = 
+
+
 class Net(nn.Module):
     def __init__(self, input_channel=3):
         super().__init__()
-        self.conv1 = nn.Conv2d(input_channel, 32, 3, padding=1, stride=1)
-        self.conv1_bn = nn.BatchNorm2d(32)
+        self.conv1 = nn.Conv2d(input_channel, 64, 7, padding=1, stride=2)
+        self.conv1_bn = nn.BatchNorm2d(64)
         self.conv2 = nn.Conv2d(32, 32, 3, padding=1, stride=1)
         self.conv2_bn = nn.BatchNorm2d(32)
         self.conv3 = nn.Conv2d(32, 32, 3, padding=1, stride=1)
