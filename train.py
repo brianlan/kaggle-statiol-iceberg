@@ -36,7 +36,7 @@ train_data_path = '/home/rlan/datasets/statoil-iceberg/train.json'
 BASE_DIR = '/home/rlan/projects/kaggle/kaggle-statoil-iceberg'
 LOG_DIR = opj(BASE_DIR, 'log')
 CHECKPOINTS_PATH = opj(BASE_DIR, 'checkpoints')
-MAX_EPOCH = 30
+MAX_EPOCH = 200
 BATCH_SIZE = 256
 
 
@@ -55,12 +55,19 @@ tb_logger = Logger(opj(LOG_DIR, model_id))
 # In[9]:
 
 
-transform = T.Compose([T.ToTensor(), T.Lambda(lambda x: (x - x.min()) / (x.max() - x.min())), T.ToPILImage(),
-                       T.RandomHorizontalFlip(), T.RandomVerticalFlip(), 
-                       T.ColorJitter(brightness=0.7, contrast=0.5, saturation=0.5),
-                       T.ToTensor(), TST.RandomRotate(15), TST.RandomShear(15), T.ToPILImage(),
-                       T.RandomResizedCrop(size=75, scale=(0.7, 1.0)), T.ToTensor(),
-                       T.Lambda(lambda x: x - x.mean())]) 
+transform = T.Compose([T.ToTensor(),
+                       T.Lambda(lambda x: (x - x.min()) / (x.max() - x.min())),
+                       T.ToPILImage(),
+                       T.RandomHorizontalFlip(),
+                       T.RandomVerticalFlip(),
+                       # T.ColorJitter(brightness=0.7, contrast=0.5, saturation=0.5),
+                       T.ToTensor(),
+                       TST.RandomRotate(5),
+                       # TST.RandomShear(15),
+                       T.ToPILImage(),
+                       T.RandomResizedCrop(size=75, scale=(0.7, 1.0)),
+                       T.ToTensor(),
+                       T.Lambda(lambda x: x - 0.5)])
 
 
 # ## Dataset
@@ -87,7 +94,7 @@ net.train()
 
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=80, gamma=0.1)
 loss_fn = torch.nn.CrossEntropyLoss()
 
 
@@ -97,8 +104,8 @@ loss_fn = torch.nn.CrossEntropyLoss()
 
 
 niter_per_epoch = ceil(len(dataset) / BATCH_SIZE)
-pbar = tqdm.tqdm(range(niter_per_epoch * MAX_EPOCH))
-for epoch in pbar:
+# pbar = tqdm.tqdm(range(niter_per_epoch * MAX_EPOCH))
+for epoch in range(MAX_EPOCH):
     lr_scheduler.step()
     for i_batch, sampled_batch in enumerate(loader):
         data, target = sampled_batch
@@ -113,8 +120,7 @@ for epoch in pbar:
         loss = loss_fn(pred, target)
         loss.backward()
         optimizer.step()
-        pbar.set_description('Epoch: {:d}, Training loss: {:.4f}'.format(floor(pbar.n / niter_per_epoch), 
-                                                                         loss.data[0]))
+        logger.info('Epoch: {:d}, Training loss: {:.4f}'.format(epoch, loss.data[0]))
         tb_logger.scalar_summary('loss', loss.data[0], epoch * niter_per_epoch + i_batch + 1)
 
     # (2) Log values and gradients of the parameters (histogram)
@@ -123,7 +129,7 @@ for epoch in pbar:
         tb_logger.histo_summary(tag, value.data.cpu().numpy(), epoch + 1)
         tb_logger.histo_summary(tag+'/grad', value.grad.data.cpu().numpy(), epoch + 1)
 
-    if (epoch + 1) % 5 == 0:
+    if (epoch + 1) % 100 == 0:
         cp_path = opj(CHECKPOINTS_PATH, model_id, 'model_%s' % epoch)
         mkdir_r(dirname(cp_path))
         torch.save(net.state_dict(), cp_path)
