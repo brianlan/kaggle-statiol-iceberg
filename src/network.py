@@ -44,16 +44,16 @@ class Net(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(input_channel, 64, 7, padding=1, stride=2)
         self.conv1_bn = nn.BatchNorm2d(64)
-        # self.dim_up1 = nn.Conv2d(64, 256, 1, padding=0, stride=1)
+
         self.res1 = BottleneckBlock(64, 64, dim_up=True)
         self.res2 = BottleneckBlock(256, 64)
         self.res3 = BottleneckBlock(256, 64)
-        # self.dim_up2 = nn.Conv2d(256, 512, 1, padding=0, stride=2)
+
         self.res4 = BottleneckBlock(256, 128, downsample=True, dim_up=True)
         self.res5 = BottleneckBlock(512, 128)
         self.res6 = BottleneckBlock(512, 128)
         self.res7 = BottleneckBlock(512, 128)
-        # self.dim_up3 = nn.Conv2d(512, 1024, 1, padding=0, stride=2)
+
         self.res8 = BottleneckBlock(512, 256, downsample=True, dim_up=True)
         self.res9 = BottleneckBlock(1024, 256)
         self.res10 = BottleneckBlock(1024, 256)
@@ -61,7 +61,11 @@ class Net(nn.Module):
         self.res12 = BottleneckBlock(1024, 256)
         self.res13 = BottleneckBlock(1024, 256)
 
-        self.fc = nn.Linear(5 * 5 * 1024, 2)
+        self.res14 = BottleneckBlock(1024, 512, downsample=True, dim_up=True)
+        self.res15 = BottleneckBlock(2048, 512)
+        self.res16 = BottleneckBlock(2048, 512)
+
+        self.fc = nn.Linear(3 * 3 * 2048, 2)
 
         self.initialize_weights()
 
@@ -88,6 +92,9 @@ class Net(nn.Module):
         x = self.res11(x)
         x = self.res12(x)
         x = self.res13(x)
+        x = self.res14(x)
+        x = self.res15(x)
+        x = self.res16(x)
         x = F.avg_pool2d(x, 3, stride=1, padding=1)
         x = x.view(x.shape[0], -1)
         x = self.fc(x)
