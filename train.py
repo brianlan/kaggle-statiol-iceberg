@@ -38,7 +38,7 @@ val_data_path = '/home/rlan/datasets/statoil-iceberg/trainval_val.json'
 BASE_DIR = '/home/rlan/projects/kaggle/kaggle-statoil-iceberg'
 LOG_DIR = opj(BASE_DIR, 'log')
 CHECKPOINTS_PATH = opj(BASE_DIR, 'checkpoints')
-MAX_EPOCH = 120
+MAX_EPOCH = 200
 BATCH_SIZE = 128
 
 # ## Setup Logger
@@ -96,8 +96,8 @@ net.train()
 # In[7]:
 
 
-optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.01)
+lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=20)
 loss_fn = torch.nn.CrossEntropyLoss()
 
 # ## Train
